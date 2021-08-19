@@ -6,3 +6,6 @@
 ## Dependencies 
 - `gr.auth.ee.dsproject.crush` Package developed by the course's instruction team
 - `java.util` Package
+
+## Code
+The answers can be found in the /src/gr/auth/ee/dsproject/crush/ folder, and the rest of the files are necessary for the execution.
