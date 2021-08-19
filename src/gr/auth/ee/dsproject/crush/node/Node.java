@@ -7,7 +7,7 @@ import gr.auth.ee.dsproject.crush.board.Tile;
 public class Node
 {
 
-	  //ορίζω τις μεταβλητές της συνάρτησης, by default private, δεν βαζω προσδιοριστικό
+	  //define class variables, private by default
 	   Node parent;
 	   ArrayList<Node> children=new ArrayList<Node>();
 	   int nodeDepth;
@@ -30,7 +30,7 @@ public class Node
 		   this.nodeEvaluation=nodeEvaluation;
 	   }
 	   public void setchildren(Node child){
-		   this.children.add(child);//δηλαδη παω στη λιστα των παιδιων και προσθετω ενα παιδακι
+		   this.children.add(child); //add another child to the already existing children list
 	   }
 	   public double getnodeEvaluation(){
 		   return nodeEvaluation;
@@ -52,29 +52,27 @@ public class Node
 		   return children.get(i);
 	   }
 	   
-	   public ArrayList<Node> getchildren(){//EINAI SWSTH AYTH H SYNTAXH?????   P   R  O  S   O  X  H
+	   public ArrayList<Node> getchildren(){
 		   return children;
 	   }
 	   
 	   
 	   public double evaluate(){
-		   //δεν χρειαζεται πχ να βρω την μορφη του πινακα αμεσως μετα την κινηση,ο,τι χρειαζομαι ειναι private μεταβλητη της κλασης Node
 		   double points;
 		   points=0;
-		   double[] result=new double[2];/*πρώτα το πλήθος των tiles που φεύγουν, επειτα αν φευγουν οριζοντια και κάθετα ταυτόχρονα,
-			  θα δεχτεί την τιμή που θα επιστραφεί απο την πρώτη υποσυνάρτηση αξιολόγησης */
-			 
+		   double[] result=new double[2];//first the number of  tiles crushed,  then if the crush is horizontal or vertical at the same time
 			  result=calculateTilesThatWillCrush(nodeBoard);
-			  points+=result[0];//πόντοι που παίρνω όσο το πλήθος των πλακακίων που θα σκάσουν
+			  points+=result[0]; //acquired points are equal to the number of tiles crushed
 			  if(result[1]==1){
-				  points+=2; //δινω δύο πόντους αν έχω ταυτόχρονη διαγραφή κάθετα και οριζόντια
+				  points+=2; //plus two points if the crush is spontaneously horizontal and vertical
 			  }
-			  //Τ Ε Λ Ε Υ Τ Α Ι Ο    κριτήριο η κατάσταση του πίνακα μετά, η συχνότητα χρωμάτων που θα προκύψει
-			  int height,width,i,color;/*ύψος και πλάτος περιοχής που ελέγχεται,δείκτης επανάληψης και χρώμα που δεν θα ελέγξω γιατι ανήκει στην
-			  κίνηση */
-			  int[] colorfrequency=new int[7]; //πινακας συχνοτητων χρωματων μεγεθους οσο και τα χρωματα,θα δεχτει το αποτελεσμα
+			  // last points evaluation metric: the post-crush board
+			  int height,width,i,color; /* height and width of the area being evaluated, and the colour that won't be taken into consideration since it belongs to the
+		   	  colour that just crushed */
+		   
+			  int[] colorfrequency=new int[7]; //colour frequency array, has a length equal to the number of available colours
 			
-			  //ευρεση μεγιστου width, height που ομως να μη με βγαζει εκτος οριων
+			  //max width, height within Board limits
 			  if(nodeMove[0]-0>CrushUtilities.NUMBER_OF_PLAYABLE_ROWS-nodeMove[0]){
 				  height=CrushUtilities.NUMBER_OF_PLAYABLE_ROWS-nodeMove[0];
 			  }else{
@@ -86,39 +84,39 @@ public class Node
 				  width=nodeMove[1]-0;
 			  }
 			  colorfrequency=sameColorInProximity(width,height,nodeMove[0],nodeMove[1],nodeBoard);
-			  color=( parent.getnodeBoard()).giveTileAt(nodeMove[0],nodeMove[1]).getColor();//δεν θελω να προσμετρηθει αυτο το χρωμα
+			  color=( parent.getnodeBoard()).giveTileAt(nodeMove[0],nodeMove[1]).getColor(); //this colour is not taken into consideration
 			  for(i=0;i<colorfrequency.length;i++){
 				  if((i!=color)&&(colorfrequency[i]>4)){
 					  points--;
-				  }//θεωρω οτι αν στη περιοχη που ορισα υπαρχουν 4 του ιδιου χρωματος, μειωνω το points κατα 1 ως μειονεκτημα.
+				  }//if there are 4 tiles of the same colour in the defined area, the points are decreased as this is a drawback
 			  }
-			  //ΕΠΙΣΤΡΟΦΗ ΤΗΣ ΕΚΤΙΜΗΣΘΕΙΣΑΣ ΑΞΙΑΣ ΤΗΣ ΚΙΝΗΣΗΣ
-			  //ΕΔΩ ΕΓΚΕΙΤΑΙ Η ΑΝΑΒΑΘΜΙΣΗ ΠΟΥ ΕΧΟΥΜΕ ΣΤΟ  ΤΡΙΤΟ ΣΚΕΛΟΣ:ΠΟΝΤΟΙ ΑΠΟ CHAINMOVES
+			  //return evaluated move value
+		   
+			  //calculate points from chainmoves
 			  Board pinakas;
-			  pinakas=CrushUtilities.boardAfterFirstCrush(getparent().getnodeBoard(),getnodeMove());/*δινω το ταμπλο του γονιου και την κινηση που αντι-
-			  προσωπευει το παιδι.ο πινακας του παιδιου ειναι ο πινακας αμεσως μετα την αλλαγη πλακακιου,πριν αλλαξει τιποτα*/
+			  pinakas=CrushUtilities.boardAfterFirstCrush(getparent().getnodeBoard(),getnodeMove()); /* pass the parent's board and the child-move. The child's board is the board right
+			  after the move before anything else changes. */
+			
 			  double a=0;
 			  do {
 				  a=chainmoves(pinakas);
-				  points+=a;//η μεταβλητη συνολικων ποντων που χρησιμοποιω σε ολοκληρη την συναρτηση,την οποια θα επιστρεψω
+				  points+=a;	//the total points variable that returns
 				  pinakas=CrushUtilities.boardAfterDeletingNples(pinakas);
-			  } while(a!=0);/*οταν το a δεν αποφερει καθολου ποντους θα σημαινει οτι δεν εχει γινει καμια αλλαγη και εχουν εξαντληθει
-			  όλα τα πιθανά chainmoves */
+			  } while(a!=0);	/* when a doesn't provoke any positive change in points, all possible chainmoves have been checked */
 			  return points;
-				  
-			  
 			  }
 		  
 		  
-		      //ΟΡΙΣΜΟΣ ΤΩΝ ΣΥΝΑΡΤΗΣΕΩΝ ΠΟΥ ΧΡΗΣΙΜΟΠΟΙΗΣΑ ΣΤΗΝ MOVEEVALUATION
+		      //definition of functions used within the evaluate() function 
 		  
-		     double[] calculateTilesThatWillCrush(Board boardaftermove){
-		    	 int i,j,k,z,color,count;//δείκτες επανάληψεις,χρώμα που ελέγχω,μετρητής ίδιων πλακακίων
-		    	 boolean flag=false;//σημαία για το αν υπάρχει ήδη στο παρακάτω arraylist κάποιο πλακάκι.
-		    	 double VerHor=0;//θα επιστραφεί δείχνοντας αν έχω μόνο οριζοντια ή κάθετα (0) ή και τα δύο (1)
-		    	 //arraylist που αποθηκευει τα κουτακια που θα φυγουν
-		    	 ArrayList <Tile> coordinates=new ArrayList <Tile>();//αποθήκευση των tiles που διαγράφονται
-		    	 //Οριζοντια Σαρωση
+		     	 double[] calculateTilesThatWillCrush(Board boardaftermove){
+		    	 int i,j,k,z,color,count;
+		    	 boolean flag=false; //flag that shows whether a tile already exists in the list
+		    	 double VerHor=0;  //returns 0 for only vertical/horizontal or 1 for a sponataneous crush
+		    	 //arraylist where about-to-crush tiles are saved 
+		    	 ArrayList <Tile> coordinates=new ArrayList <Tile>();
+				 
+		    	 //Horizontal Scan
 		    	 for(i=0;i<CrushUtilities.NUMBER_OF_PLAYABLE_ROWS;i++){  
 		    		 color=boardaftermove.giveTileAt(i, 0).getColor();
 		    		 count=1;
@@ -136,7 +134,7 @@ public class Node
 		    			 }
 		    		 }
 		    	 }
-		    	 //Κάθετη Σάρωση
+		    	 //Vertical Scan
 		    	for(j=0;j<CrushUtilities.NUMBER_OF_COLUMNS;j++){
 		    		color=boardaftermove.giveTileAt(0,j).getColor();
 		    		count=1;
@@ -147,24 +145,19 @@ public class Node
 		    				color=boardaftermove.giveTileAt(i+1, j).getColor();
 		    				if(count>=3){
 		    					for(k=i;k>i-count;k--){
-		    						flag=false; //για καθε τουβλακι που θα ελεγξω αν ηδη υπαρχει υποθετω οτι δεν υπαρχει μεσω flag=0
-		    						for(z=0;z<coordinates.size();z++){
+		    						flag=false; //initial hypothesis for every tile checked is that it doesn't already exist in the horizonta list		    						for(z=0;z<coordinates.size();z++){
 		    							if(coordinates.get(z).getX()==i && coordinates.get(z).getY()==j){
 		    								flag=true;
-		    								VerHor=1;//υπαρχει εστω και ενα ταυτοχρονο διπλο καθετο-οριζοντιο
+		    								VerHor=1; //at least one spontaneous horizontal-vertical crush exists 
 		    								
 		    							}
 		    						}
 		    						if(flag==false){
 		    							coordinates.add(boardaftermove.giveTileAt(k, j));
 		    							
-		    						}//προσθεση του tile αμα δεν υπαρχει
+		    						}//add tile if it doesn't already exist
 		    						
-		    		 
-		    		 
-		    		 
-		    						 
-		    					 }
+							 }
 		    				 }
 		    				count=1;
 		    				 
@@ -172,33 +165,18 @@ public class Node
 		    		 }
 		    	 }
 		    	double[] result=new double[2];
-	 	    	result[0]=coordinates.size(); //αυτοματη μετατροπη του int που επιστρεφει το size σε double
+	 	    	result[0]=coordinates.size(); //convert int size to double
 		    	result[1]=VerHor;
 		        return result;
-		        
-		    	 
-		    	 
-			  
-			  
-			  
-			  
-			   
-			
-			  
-			  
-		    
-
 		  }
+		    
 		     
 		     
-		     
-		     
-		  int[] sameColorInProximity(int width,int height,int x,int y,Board A){/*αυτος ο αλγοριθμος συμφερει καλυτερα για οταν το 
-		  τετραγωνακι που σκοπευω να μετακινησω ειναι καπου στο μεσο του πινακα.Για ακραιες περιπτωσεις μπορει να σαρωσει μονο τμηματα
-		  σειρας η γραμμης */
-			  int[] colorfrequency=new int [7];//πίνακας συχνοτήτων
-			  int i,j;//δείκτες επανάληψης
-			  //αποδοση αρχικης τιμης ισης με το 0 στα στοιχεια του πινακα
+		  int[] sameColorInProximity(int width,int height,int x,int y,Board A){/* this algorithm returns better results when the tile to be moves is in the central area 
+		  rather than the marginal one */
+			  int[] colorfrequency=new int [7]; //frequency matrix
+			  int i,j;
+			  //initialize to zero
 			  for(i=0;i<colorfrequency.length;i++){
 				  colorfrequency[i]=0;
 			  }
@@ -212,23 +190,18 @@ public class Node
 		  }
 		  
 		  double chainmoves(Board boardaftermove){
-			  int i,j,k,z,color,count;//δείκτες επανάληψεις,χρώμα που ελέγχω,μετρητής ίδιων πλακακίων
-	 	      boolean flag=false;//σημαία για το αν υπάρχει ήδη στο παρακάτω arraylist κάποιο πλακάκι.
-	 	      
-	 	 //arraylist που αποθηκευει τα κουτακια που θα φυγουν
-	 	      ArrayList <Tile> coordinates=new ArrayList <Tile>();//αποθήκευση των tiles που διαγράφονται
-	 	 //Οριζοντια Σαρωση
-	 	      for(i=0;i<CrushUtilities.NUMBER_OF_PLAYABLE_ROWS;i++){  
-	 		     color=boardaftermove.giveTileAt(i, 0).getColor();
-	 		     count=1;
-	 		     for(j=0;j<CrushUtilities.NUMBER_OF_COLUMNS-1;j++){
+			  int i,j,k,z,color,count;
+	 	      	  boolean flag=false;
+			  ArrayList <Tile> coordinates=new ArrayList <Tile>();
+			  for(i=0;i<CrushUtilities.NUMBER_OF_PLAYABLE_ROWS;i++){  
+	 		     	color=boardaftermove.giveTileAt(i, 0).getColor();
+	 		     	count=1;
+	 		     	for(j=0;j<CrushUtilities.NUMBER_OF_COLUMNS-1;j++){
 	 			    if(boardaftermove.giveTileAt(i,j+1).getColor()==color){
 	 			    	if(color!=(-1)){
 	 				      count++;
-	 			    	}/*για καποιο χρώμα ακόμη και αν αυτό είναι το -1.λαμβανω ομως υποψιν τα ιδια ζαχαρωτα απο αποψη μετρησης μόνο
-	 			    	όταν έχουν ορισμένο χρώμα, διάφορο του -1.αυτό το μικρό τρικ γίνεται για να μην μπλέξω πολύ τον αλγόριθμο με τμήματα-γρίφους*/
-	 			    	
-	 			    }else{
+	 			    	}
+	 			    	}else{
 	 				   color=boardaftermove.giveTileAt(i,j+1).getColor();
 	 				   if(count>=3){
 	 					 for(k=j;k>j-count;k--){
@@ -237,57 +210,40 @@ public class Node
 	 				   }
 	 				   count=1;
 	 			    }
-	 		     }
-	 	      }
-	 	 //Κάθετη Σάρωση
-	 	      for(j=0;j<CrushUtilities.NUMBER_OF_COLUMNS;j++){
-	 		    color=boardaftermove.giveTileAt(0,j).getColor();
-	 		    count=1;
-	 		    for(i=0;i<CrushUtilities.NUMBER_OF_PLAYABLE_ROWS-1;i++){
-	 			   if(boardaftermove.giveTileAt(i+1,j).getColor()==color){
-	 				count++;
-	 			   }else{
-	 				  color=boardaftermove.giveTileAt(i+1, j).getColor();
-	 				  if(count>=3){
-	 					for(k=i;k>i-count;k--){
-	 						flag=false; //για καθε τουβλακι που θα ελεγξω αν ηδη υπαρχει υποθετω οτι δεν υπαρχει μεσω flag=0
-	 						for(z=0;z<coordinates.size();z++){
-	 							if(coordinates.get(z).getX()==i && coordinates.get(z).getY()==j){
-	 								flag=true;
-	 								
-	 								
-	 							}
-	 						}
-	 						if(flag==false){
-	 							coordinates.add(boardaftermove.giveTileAt(k, j));
-	 							
-	 						}//προσθεση του tile αμα δεν υπαρχει
-	 						
-	 		 
-	 		 
-	 		 
-	 						 
-	 					}
-	 				 }
-	 				count=1;
-	 				 
-	 			 }
-	 		 }
-	 	 }
-	 	      double result=coordinates.size(); //αυτοματη μετατροπη απο int σε double
+	 		     	}	
+	 	      	 }
+
+			    for(j=0;j<CrushUtilities.NUMBER_OF_COLUMNS;j++){
+				    color=boardaftermove.giveTileAt(0,j).getColor();
+				    count=1;
+				    for(i=0;i<CrushUtilities.NUMBER_OF_PLAYABLE_ROWS-1;i++){
+					   if(boardaftermove.giveTileAt(i+1,j).getColor()==color){
+						count++;
+					   }else{
+						  color=boardaftermove.giveTileAt(i+1, j).getColor();
+						  if(count>=3){
+							for(k=i;k>i-count;k--){
+								flag=false; 
+								for(z=0;z<coordinates.size();z++){
+									if(coordinates.get(z).getX()==i && coordinates.get(z).getY()==j){
+										flag=true;
+									}
+								}
+								if(flag==false){
+									coordinates.add(boardaftermove.giveTileAt(k, j));
+
+								}
+
+							}
+						 }
+						count=1;
+
+					 }
+				    }
+			     }
+	 	      double result=coordinates.size();
 	 	      return result;
 			  
 			  
-			  
-		  }
-		  
-
-		
-
-	   }
-
-
-	   
-
-
-
+	}
+}
