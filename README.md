@@ -8,4 +8,10 @@
 - `java.util` Package
 
 ## Code
-The answers can be found in the /src/gr/auth/ee/dsproject/crush/ folder, and the rest of the files are necessary for the execution.
+The answers can be found in the ``/src/gr/auth/ee/dsproject/crush/`` folder, and the rest of the files are necessary for the execution.
+
+## Contact me
+
+- [e-mail elefthvp](mailto:el.papaioannou.96@gmail.com "el.papaioannou.96@gmail.com")
+
+---
